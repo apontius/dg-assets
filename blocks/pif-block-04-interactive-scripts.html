@@ -1,0 +1,90 @@
+<!-- MAILERLITE BLOCK 5 OF 5 -->
+<script>
+(function(){
+ 'use strict';
+
+ const STRIPE_PAYMENT_LINK = 'https://forward.disappointinggrace.com/b/aFaeVe2BX3bH6653CO6J201';
+ const SHARE_URL = 'https://disappointinggrace.com/#formats';
+ const SHARE_TEXT = 'This made me think of you. It’s an honest story about faith when life falls apart. The eBook and audiobook are free if you’d like to read or listen.';
+
+ const root=document.getElementById('pif-contribute');
+ if(!root || root.dataset.initialized)return;
+ root.dataset.initialized='true';
+
+ let validPayment=false;
+ try{
+  const url=new URL(STRIPE_PAYMENT_LINK);
+  validPayment=url.protocol==='https:' &&
+   ['buy.stripe.com','forward.disappointinggrace.com'].includes(url.hostname) &&
+   url.pathname.length>1;
+ }catch(e){}
+
+ if(validPayment){
+  root.querySelectorAll('[data-pif-payment]').forEach(function(link){
+   link.href=STRIPE_PAYMENT_LINK;
+   link.removeAttribute('aria-disabled');
+   link.removeAttribute('tabindex');
+  });
+  const note=document.getElementById('pif-payment-note');
+  if(note)note.textContent='One-time contribution. Choose your amount. Secure payment through Stripe.';
+ }
+
+ const status=document.getElementById('pif-share-status');
+ function showStatus(text){
+  if(status)status.textContent=text;
+ }
+
+ async function copyLink(){
+  try{
+   await navigator.clipboard.writeText(SHARE_URL);
+   showStatus('Link copied. Paste it into a text or email.');
+  }catch(e){
+   showStatus('Copy this link to share: '+SHARE_URL);
+  }
+ }
+
+ const copyButton=document.getElementById('pif-copy-button');
+ if(copyButton)copyButton.addEventListener('click',copyLink);
+
+ const shareButton=document.getElementById('pif-share-button');
+ if(shareButton)shareButton.addEventListener('click',async function(){
+  if(navigator.share){
+   try{
+    await navigator.share({
+     title:'Disappointing Grace',
+     text:SHARE_TEXT,
+     url:SHARE_URL
+    });
+    showStatus('');
+   }catch(e){
+    if(e.name!=='AbortError')await copyLink();
+   }
+  }else{
+   await copyLink();
+  }
+ });
+
+ const reduceMotion=window.matchMedia &&
+  window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+ if(!reduceMotion && 'IntersectionObserver' in window){
+  const items=document.querySelectorAll(
+   '.dg-pif .pif-intro, .dg-pif .pif-book-image, '+
+   '.dg-pif .pif-origin, .dg-pif .pif-contribute, '+
+   '.dg-pif .pif-section-head, .dg-pif .pif-feature, '+
+   '.dg-pif .pif-proof, .dg-pif .pif-share-image, '+
+   '.dg-pif .pif-share-message, .dg-pif .pif-faq, '+
+   '.dg-pif .pif-closing h2'
+  );
+  const observer=new IntersectionObserver(function(entries){
+   entries.forEach(function(entry){
+    if(entry.isIntersecting){
+     entry.target.classList.add('pif-enter');
+     observer.unobserve(entry.target);
+    }
+   });
+  },{threshold:.08});
+  items.forEach(function(item){observer.observe(item);});
+ }
+})();
+</script>
